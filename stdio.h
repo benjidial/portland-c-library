@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-/*Copyright 2018 Benji Dial
+/*Written by Benji Dial
   PortlandCLib stdio.h*/
 
 #define FILE /*TODO*/
