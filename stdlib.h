@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-/*Copyright 2018 Benji Dial
+/*Written by Benji Dial
   PortlandCLib stdlib.h*/
 
 #define MEM_BLOCK_SIZE /*TODO*/
@@ -25,6 +25,14 @@ inline void free(void *block) {
   asm volatile (
     "pushw %block\n"
     "int $0x81\n"
+    "addw $2, %sp"
+  );
+}
+
+inline void system(uint8_t *path) {
+  asm volatile (
+    "pushw %path\n"
+    "int $0x95\n"
     "addw $2, %sp"
   );
 }
