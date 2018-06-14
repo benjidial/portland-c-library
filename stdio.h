@@ -3,6 +3,9 @@
 /*Copyright 2018 Benji Dial
   PortlandCLib stdio.h*/
 
+#define FILE /*TODO*/
+#define FILE_POS_T /*TODO*/
+
 inline void putchar(uint8_t ch) {
   asm volatile (
     "pushb %ch\n"
@@ -38,4 +41,63 @@ inline uint8_t *gets(uint8_t *str) {
     "addw $3, %sp"
   );
   return str;
+}
+
+inline void remove(uint8_t *str) {
+  asm volatile (
+    "pushw %str\n"
+    "int $0x97\n"
+    "addw $2, %sp"
+  );
+}
+
+inline FILE *fopen(uint8_t *name) {
+  FILE *r;
+  asm volatile (
+    "pushw %name\n"
+    "int $0x90\n"
+    "addw $2, %sp"
+  : "=a" (r));
+  return r;
+}
+
+inline void fclose(FILE *file) {
+  asm volatile (
+    "pushw %file\n"
+    "int $0x91\n"
+    "addw $2, %sp"
+  );
+}
+
+inline void fread(uint8_t *buffer, size_t length, FILE *file) {
+  asm volatile (
+    "pushw %buffer\n"
+    "pushw %length\n"/*Assuming size_t is 16-bit*/
+    "pushw %file\n"
+    "int $0x93\n"
+    "addw $6, %sp"
+  );
+}
+
+inline void fwrite(uint8_t buffer, size_t length, FILE *file) {
+  asm volatile (
+    "pushw %buffer\n"
+    "pushw %length\n"/*Assuming size_t is 16-bit*/
+    "pushw %file\n"
+    "int $0x94\n"
+    "addw $6, %sp"
+  );
+}
+
+inline void fsetpos(FILE *file, FILE_POS_T position) {
+  asm volatile (
+    "pushw %position\n"/*Assuming FILE_POS_T is 16-bit*/
+    "pushw %file\n"
+    "int 0x92\n"
+    "addw $4, %sp"
+  );
+}
+
+inline void rewind(FILE *file) {
+  fsetpos(file, 0);
 }
