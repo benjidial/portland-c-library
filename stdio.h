@@ -3,8 +3,9 @@
 /*Written by Benji Dial
   PortlandCLib stdio.h*/
 
-#define FILE /*TODO*/
-#define FILE_POS_T /*TODO*/
+typedef struct {
+} FILE;
+typedef uint16_t FILE_POS_T;
 
 inline void putchar(uint8_t ch) {
   asm volatile (
