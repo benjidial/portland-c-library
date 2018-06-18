@@ -3,20 +3,20 @@
 /*Written by Benji Dial
   PortlandCLib stdlib.h*/
 
-#define MEM_BLOCK_SIZE /*TODO*/
-
-inline void *calloc(void) {
-  void *r = malloc();
-  uint16_t *i, *e = (i = (uint16_t)r - 2) + MEM_BLOCK_SIZE; /*Assuming MEM_BLOCK_SIZE even*/
-  while ((i += 2) < e)
-    *i = 0x0000;
+inline void *calloc(uint16_t size) {
+  void *r = malloc(size);
+  uint8_t *i, *e = (i = r - 1) + size;
+  while ((++i) < e)
+    *i = 0x00;
   return r;
 }
 
-inline void *malloc(void) {
+inline void *malloc(uint16_t size) {
   void *r;
   asm volatile (
-    "int $0x80"
+    "pushw %size\n"
+    "int $0x80\n"
+    "addw $2, %sp"
   : "=a" (r));
   return r;
 }
