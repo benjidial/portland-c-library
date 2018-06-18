@@ -4,6 +4,10 @@
   PortlandCLib stdio.h*/
 
 typedef struct {
+  uint8_t file_id;
+  uint16_t length;
+  uint16_t position;
+  uint8_t *contents;
 } FILE;
 typedef uint16_t FILE_POS_T;
 
@@ -65,6 +69,7 @@ inline FILE *fopen(uint8_t *name) {
 inline void fclose(FILE *file) {
   asm volatile (
     "pushw %file\n"
+    "int $0x96\n"
     "int $0x91\n"
     "addw $2, %sp"
   );
