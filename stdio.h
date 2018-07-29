@@ -4,106 +4,74 @@
   PortlandCLib stdio.h*/
 
 typedef struct {
-  uint8_t file_id;
-  uint16_t length;
-  uint16_t position;
-  uint8_t *contents;
+  /*PFS driver structure*/
+  uint16_t pos;
 } FILE;
-typedef uint16_t FILE_POS_T;
 
 inline void putchar(uint8_t ch) {
-  asm volatile (
-    "pushb %ch\n"
-    "int $0x8d\n"
-    "addw $1, %sp"
-  );
+  asm (
+    "int $0x48"
+  :: "al" (ch));
 }
 
 inline void puts(uint8_t *str) {
-  asm volatile (
-    "pushw %str\n"
-    "int $0x8e\n"
-    "addw $2, %sp"
-  );
-  putchar('\n');
+  asm (
+    "int $0x4a\n"
+    "mov $10, %al\n"
+    "int $0x48"
+  :: "ebx" (str) : "al");
 }
 
 inline uint8_t getchar(void) {
   uint8_t r;
-  asm volatile (
-    "pushb $0x01\n"
-    "int $0x99\n"
-    "addw $1, %sp"
-  : "=a" (r));
+  asm (
+    "mov $0x00, %al\n"
+    "int $0x50"
+  : "=dl" (r) :: "al");
   return r;
 }
 
-inline uint8_t *gets(uint8_t *str) {
-  asm volatile (
-    "pushb $0x01"
-    "pushw %str\n"
-    "int $0x9a\n"
-    "addw $3, %sp"
-  );
+inline uint8_t *gets(uint8_t *str, uint16_t max_size) {
+  asm (
+    "mov $0x00, %al\n"
+    "int $0x52"
+  :: "ebx" (str), "cx" (max_size) : "al");
   return str;
 }
 
 inline void remove(uint8_t *str) {
-  asm volatile (
-    "pushw %str\n"
-    "int $0x97\n"
-    "addw $2, %sp"
-  );
+  asm (
+    "int $0x45"
+  :: "ebx" (str) : "al");
 }
 
 inline FILE *fopen(uint8_t *name) {
   FILE *r;
-  asm volatile (
-    "pushw %name\n"
-    "int $0x90\n"
-    "addw $2, %sp"
-  : "=a" (r));
+  asm (
+    "mov ax, SIZE OF FILE STRUCTURE\n"
+    "int $0x58\n"
+    "int $0x43"
+  : "=ebx" (r) : "edx" (name) : "al");
+  r->pos = 0;
   return r;
 }
 
 inline void fclose(FILE *file) {
-  asm volatile (
-    "pushw %file\n"
-    "int $0x96\n"
-    "int $0x91\n"
-    "addw $2, %sp"
-  );
+  asm (
+    "int $0x59"
+  :: "ebx" (file) : "al");
 }
 
-inline void fread(uint8_t *buffer, size_t length, FILE *file) {
-  asm volatile (
-    "pushw %buffer\n"
-    "pushw %length\n"/*Assuming size_t is 16-bit*/
-    "pushw %file\n"
-    "int $0x93\n"
-    "addw $6, %sp"
-  );
+inline void fread(uint8_t *buffer, uint16_t length, FILE *file) {
+  asm (
+    "int $0x40"
+  :: "ax" (file->pos), "ebx" (file), "cx" (length), "edx" (buffer) : "al");
+  file->pos += length;
 }
 
-inline void fwrite(uint8_t buffer, size_t length, FILE *file) {
-  asm volatile (
-    "pushw %buffer\n"
-    "pushw %length\n"/*Assuming size_t is 16-bit*/
-    "pushw %file\n"
-    "int $0x94\n"
-    "addw $6, %sp"
-  );
-}
-
-inline void fsetpos(FILE *file, FILE_POS_T position) {
-  asm volatile (
-    "pushw %position\n"/*Assuming FILE_POS_T is 16-bit*/
-    "pushw %file\n"
-    "int 0x92\n"
-    "addw $4, %sp"
-  );
-}
-
-inline void rewind(FILE *file) {
-  fsetpos(file, 0);
+inline void fwrite(uint8_t *buffer, uint16_t length, FILE *file) {
+  asm (
+    "int $0x41"
+  :: "ax" (file->pos), "ebx" (file), "cx" (length), "edx" (buffer) : "al");
+  file->pos += length;
 }
